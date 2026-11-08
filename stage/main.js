@@ -3,7 +3,7 @@ import { group, node, place } from "../bonnie/helpers/MyObject.js";
 import { startViewer } from "../bonnie/helpers/viewer.js";
 import { generateEllipsoidSurface, generateEllipticCone } from "../bonnie/helpers/builders.js";
 import { buildBonnie } from "../bonnie/helpers/model.js";
-import { buildFreddy } from "../freddy fnaf/helpers/model.js";
+import { buildFreddy } from "../freddy/helpers/model.js";
 import { buildChica } from "../chica/chica/helpers/model.js";
 import * as jumpscareBonnie from "../jumpscare/bonnie.js";
 import * as jumpscareFreddy from "../jumpscare/freddy.js";

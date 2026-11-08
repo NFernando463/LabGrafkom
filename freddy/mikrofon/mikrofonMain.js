@@ -6,6 +6,101 @@ import { node, group, place } from "../helpers/MyObject.js";
 const C = B.COLORS;
 const sin = Math.sin;
 
+
+// kabel mikrofon berbentuk tabung mengikuti kurva bezier 3d
+function generateMicrophoneCable() {
+    const start = [0, -0.88, 0];
+    const control1 = [-0.08, -1.22, 0.04];
+    const control2 = [-0.62, -1.32, 0.24];
+    const end = [-0.72, -1.82, 0.38];
+    const segments = 48;
+    const sides = 12;
+    const radius = 0.045;
+    const cableColor = [0.035, 0.035, 0.045];
+    const vertices = [];
+    const faces = [];
+    const rings = [];
+
+    const cross = (a, b) => [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    ];
+    const normalize = (v) => {
+        const length = Math.hypot(v[0], v[1], v[2]);
+        return length > 1e-8 ? v.map(value => value / length) : [0, 1, 0];
+    };
+
+    for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const s = 1 - t;
+        const point = [0, 1, 2].map(axis =>
+            s ** 3 * start[axis] +
+            3 * s ** 2 * t * control1[axis] +
+            3 * s * t ** 2 * control2[axis] +
+            t ** 3 * end[axis]
+        );
+        const tangent = normalize([0, 1, 2].map(axis =>
+            3 * s ** 2 * (control1[axis] - start[axis]) +
+            6 * s * t * (control2[axis] - control1[axis]) +
+            3 * t ** 2 * (end[axis] - control2[axis])
+        ));
+
+        // pilih sumbu acuan yang tidak sejajar dengan arah kabel
+        const reference = Math.abs(tangent[1]) < 0.9 ? [0, 1, 0] : [0, 0, 1];
+        const normal = normalize(cross(tangent, reference));
+        const binormal = normalize(cross(tangent, normal));
+        const ringStart = vertices.length / 9;
+        rings.push(ringStart);
+
+        for (let j = 0; j <= sides; j++) {
+            const angle = (2 * Math.PI * j) / sides;
+            const cosAngle = Math.cos(angle);
+            const sinAngle = Math.sin(angle);
+            const nx = normal[0] * cosAngle + binormal[0] * sinAngle;
+            const ny = normal[1] * cosAngle + binormal[1] * sinAngle;
+            const nz = normal[2] * cosAngle + binormal[2] * sinAngle;
+
+            vertices.push(
+                point[0] + radius * nx,
+                point[1] + radius * ny,
+                point[2] + radius * nz,
+                cableColor[0], cableColor[1], cableColor[2],
+                nx, ny, nz
+            );
+        }
+    }
+
+    // hubungkan setiap cincin menjadi tabung
+    for (let i = 0; i < segments; i++) {
+        for (let j = 0; j < sides; j++) {
+            const a = rings[i] + j;
+            const b = rings[i + 1] + j;
+            faces.push(a, b, a + 1, b, b + 1, a + 1);
+        }
+    }
+
+    // tutup kedua ujung tabung agar tidak terlihat berlubang
+    const addCap = (ringStart, point, normal) => {
+        const centerIndex = vertices.length / 9;
+        vertices.push(
+            point[0], point[1], point[2],
+            cableColor[0], cableColor[1], cableColor[2],
+            normal[0], normal[1], normal[2]
+        );
+        for (let j = 0; j < sides; j++) {
+            const current = ringStart + j;
+            const next = ringStart + j + 1;
+            faces.push(centerIndex, current, next);
+        }
+    };
+
+    addCap(rings[0], start, [0, 1, 0]);
+    addCap(rings[rings.length - 1], end, [0, -1, 0]);
+
+    return { vertices, faces };
+}
+
 /* ====== MIKROFON FREDDY ======
    Dibangun sepanjang sumbu Y (kepala mic di atas, gagang di bawah).
    ellipsoid           : kepala mic, tombol, ujung gagang
@@ -21,6 +116,7 @@ export function buildMikrofon() {
     return group([0, 0, 0], [0, 0, 0], [
         node(B.generateHyperboloidOneSheet({ a: 0.2, b: 0.9, c: 0.2, uMax: 1, color: C.BLACK }), [0, 0, 0]),   // gagang
         node(B.generateEllipsoidSurface({ a: 0.24, b: 0.14, c: 0.24, color: C.DARK }), [0, -0.92, 0]),        // ujung gagang
+        node(generateMicrophoneCable(), [0, 0, 0]), // kabel melengkung di ujung mikrofon
         node(B.generateHyperboloidOneSheet({ a: 0.26, b: 0.05, c: 0.26, uMax: 0.8, color: metal }), [0, 0.6, 0]), // cincin logam
         node(B.generateEllipsoidSurface({ a: 0.1, b: 0.06, c: 0.05, color: C.RED }), [0, 0.38, 0.2]),         // tombol on/off (tepat di atas genggaman)
         node(B.generateEllipticCone({ a: 0.6, b: 0.6, height: -0.15, color: metal }), [0, 1.05, 0], [Math.PI, 0, 0]), // penyangga

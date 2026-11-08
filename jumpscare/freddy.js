@@ -3,8 +3,8 @@
 // lalu kepalanya bergetar dan rahangnya terbuka lebar. Topi tingginya ikut miring.
 // Dipanggil dari stage/main.js. File lain: bonnie.js dan chica.js (strukturnya sama).
 import { group, place } from "../bonnie/helpers/MyObject.js";
-import { buildFreddy } from "../freddy fnaf/helpers/model.js";
-import { scare } from "../freddy fnaf/helpers/scare.js";
+import { buildFreddy } from "../freddy/helpers/model.js";
+import { scare } from "../freddy/helpers/scare.js";
 
 const HEAD_Y = 4.2;      // tinggi kepala dari akar model Freddy
 const FACE_Z = 1.8;      // posisi akhir kepala (dekat kamera)
