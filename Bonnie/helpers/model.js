@@ -14,7 +14,7 @@ export function buildBonnie({ walk = null, strum = undefined, guitar = true } = 
         : {};
     const rightArmPose = strum === undefined ? {} : { strum };
     bonnie.childs.push(
-        place(buildKepala(), [0, 4.2, 0]),
+        place(buildKepala(), [0, 4.2, 0], [0, 0, 0], 1.02),
         // Tangan kanan: pivot dimajukan ke z=0.9 (shoulderBack 0.9 di dalam pose menjaga bola bahu tetap di z=0);
         // pose dihitung untuk gitar di [-0.5, -1.3, 2.0]. Tangan kiri mengunci leher gitar.
         place(buildTanganKanan(rightArmPose), [-2.35, 1.8, 0.9]),

@@ -2,7 +2,7 @@
 // Chica muncul dari gelap, menerjang dari atas-kiri ke arah kamera sampai wajahnya memenuhi layar,
 // lalu kepalanya bergetar, paruh bawahnya terbuka lebar dan jengger bulunya ikut berguncang.
 // Dipanggil dari stage/main.js. File lain: bonnie.js dan freddy.js (strukturnya sama).
-import { group, place } from "../bonnie/helpers/MyObject.js";
+import { group, place } from "../Bonnie/helpers/MyObject.js";
 import { buildChica } from "../chica/chica/helpers/model.js";
 import { scare } from "../chica/chica/helpers/scare.js";
 

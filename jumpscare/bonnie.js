@@ -2,16 +2,17 @@
 // Bonnie muncul dari gelap, lari ke arah kamera sampai wajahnya memenuhi layar,
 // lalu kepalanya bergetar dan mulutnya terbuka lebar.
 // Dipanggil dari stage/main.js. Dua file lain: freddy.js dan chica.js (strukturnya sama).
-import { group, place } from "../bonnie/helpers/MyObject.js";
-import { buildBonnie } from "../bonnie/helpers/model.js";
-import { scare } from "../bonnie/helpers/scare.js";
+import { group, place } from "../Bonnie/helpers/MyObject.js";
+import { buildBonnie } from "../Bonnie/helpers/model.js";
+import { scare } from "../Bonnie/helpers/scare.js";
 
 const HEAD_Y = 4.2;      // tinggi kepala dari akar model Bonnie
-const FACE_Z = 2.0;      // posisi akhir kepala (dekat kamera)
+const FACE_Z = 0.8;      // posisi akhir kepala, sedikit lebih jauh dari kamera
 const START_Z = -9;      // posisi awal (jauh di belakang)
 const START_X = -3;      // mulai dari sisi kiri
 const LUNGE = 0.26;      // lama Bonnie berlari ke depan (detik)
-const CAM_DIST = 7.6;
+const CAM_DIST = 10.2;
+const REFERENCE_CAM_DIST = 8.2;
 
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const smooth = v => { const t = clamp01(v); return t * t * (3 - 2 * t); };
@@ -52,11 +53,14 @@ export function buildJumpscareScene(getTime, start, end) {
 
             const x = lerp(START_X, 0, p) + Math.sin(e * 52) * 0.11 * getar;
             const y = Math.sin(e * 61) * 0.07 * getar;
-            const z = lerp(START_Z, FACE_Z, p) + maju + Math.sin(e * 47) * 0.1 * getar;
-            const yaw = lerp(0.55, 0, p) + Math.sin(e * 39) * 0.06 * getar;
-            const roll = 0.05 * getar;
+            const baseZ = lerp(START_Z, FACE_Z, p) + maju + Math.sin(e * 47) * 0.1 * getar;
+            const angle = lerp(0.55, 0, p) + Math.sin(e * 39) * 0.06 * getar + 0.05 * getar;
 
-            return { pos: [x, y, z], rot: [0, yaw, roll] };
+            const referenceScale = 1 + 0.25 * p;
+            const scale = 1 + 0.5 * p;
+            const frameScale = scale / referenceScale;
+            const z = CAM_DIST - scale * (REFERENCE_CAM_DIST - baseZ);
+            return { pos: [x * frameScale, y * frameScale, z], rot: { axis: [0.12, 1, 0.08], angle }, scale };
         },
     });
 

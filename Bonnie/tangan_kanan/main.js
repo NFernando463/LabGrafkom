@@ -22,6 +22,7 @@ export function buildTanganKanan(pose = {}) {
         handRotation: 0.64,
         wristBend: -0.30,       // pergelangan menekuk
         wristTwist: 2.28,       // telapak diputar menghadap gitar
+        arbitraryWristAxis: true,
         strum: 0.06, sway: 0, swayRate: 6, phase: 0,
         reach: 0, elbowBack: 0, handForward: 0, forearmForward: 0, upperForward: -0.35,
         // upperThickness dibiarkan 1 (default) supaya lengan atas kanan sama tebal dengan kiri

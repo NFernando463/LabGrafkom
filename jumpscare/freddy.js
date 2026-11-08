@@ -2,7 +2,7 @@
 // Freddy muncul dari gelap sisi kanan, melangkah berat ke arah kamera sampai wajahnya memenuhi layar,
 // lalu kepalanya bergetar dan rahangnya terbuka lebar. Topi tingginya ikut miring.
 // Dipanggil dari stage/main.js. File lain: bonnie.js dan chica.js (strukturnya sama).
-import { group, place } from "../bonnie/helpers/MyObject.js";
+import { group, place } from "../Bonnie/helpers/MyObject.js";
 import { buildFreddy } from "../freddy/helpers/model.js";
 import { scare } from "../freddy/helpers/scare.js";
 

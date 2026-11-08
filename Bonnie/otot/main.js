@@ -13,10 +13,25 @@ const C = B.COLORS;
 const sin = Math.sin;
 const E = (a, b, c, color = C.MUSCLE) => B.generateEllipsoidSurface({ a, b, c, color });
 
+function toAxisAngle([x, y, z]) {
+    const cx = Math.cos(x / 2), sx = Math.sin(x / 2);
+    const cy = Math.cos(y / 2), sy = Math.sin(y / 2);
+    const cz = Math.cos(z / 2), sz = Math.sin(z / 2);
+    const qx = cz * cy * sx - sz * sy * cx;
+    const qy = cz * sy * cx + sz * cy * sx;
+    const qz = sz * cy * cx - cz * sy * sx;
+    const qw = cz * cy * cx + sz * sy * sx;
+    const sinHalfAngle = Math.hypot(qx, qy, qz);
+
+    return sinHalfAngle < 1e-8
+        ? { axis: [1, 0, 0], angle: 0 }
+        : { axis: [qx / sinHalfAngle, qy / sinHalfAngle, qz / sinHalfAngle], angle: 2 * Math.atan2(sinHalfAngle, qw) };
+}
+
 // Ukuran segmen (satuan model) - diambil dari foto referensi
 export const ARM = { upper: 2.25, fore: 2.1 };
 
-export function buildArm(side, { upper = -0.2, out = 0.3, fore = -0.3, inward = 0, sway = 0.03, swayRate = 1.5, strum = 0, phase = 0, handRotation = 0, reach = 0, elbowBack = 0, handForward = 0, forearmForward = 0, upperForward = 0.05, shoulderBack = 0, grip = false, upperThickness = 1, wristBend = 0, wristTwist = 0 } = {}) {
+export function buildArm(side, { upper = -0.2, out = 0.3, fore = -0.3, inward = 0, sway = 0.03, swayRate = 1.5, strum = 0, phase = 0, handRotation = 0, reach = 0, elbowBack = 0, handForward = 0, forearmForward = 0, upperForward = 0.05, shoulderBack = 0, grip = false, upperThickness = 1, wristBend = 0, wristTwist = 0, arbitraryWristAxis = false } = {}) {
     const strumAt = t => typeof strum === "function" ? strum(t) : strum;
     const elbowDepth = reach * 0.65 - elbowBack;
     const upperSegmentAngle = Math.asin(-elbowDepth / ARM.upper);
@@ -42,7 +57,8 @@ export function buildArm(side, { upper = -0.2, out = 0.3, fore = -0.3, inward = 
     handParts.push(node(E(0.2, 0.34, 0.2, C.PURPLE), [side * (grip ? 0.54 : 0.66), grip ? -0.48 : -0.4, grip ? 0.36 : 0.34], [0, 0, side * 0.75]));
 
     // rot pergelangan: x = menekuk (wristBend), y = memutar telapak (wristTwist), z = miring (handRotation)
-    const hand = group([0, -ARM.fore, reach * 0.35 + handForward], [wristBend, wristTwist, handRotation], [
+    const wristRotation = [wristBend, wristTwist, handRotation];
+    const hand = group([0, -ARM.fore, reach * 0.35 + handForward], arbitraryWristAxis ? toAxisAngle(wristRotation) : wristRotation, [
         ...handParts,
     ], {
         // Petikan: pergelangan berayun di bidang gitar dan sedikit menekuk ke depan.
@@ -51,7 +67,8 @@ export function buildArm(side, { upper = -0.2, out = 0.3, fore = -0.3, inward = 
             const s = sin(10 * t + phase);
             const amount = strumAt(t);
             const intensity = Math.max(0, Math.min(1, amount / 0.06));
-            return { rot: [-0.06 * (1 + s) * 0.5 * intensity, 0, 0.22 * s * intensity] };
+            const rotation = [-0.06 * (1 + s) * 0.5 * intensity, 0, 0.22 * s * intensity];
+            return { rot: arbitraryWristAxis ? toAxisAngle(rotation) : rotation };
         } : null,
     });
     const elbow = group([0, -ARM.upper, reach * 0.65 - elbowBack], [fore, 0, -side * inward], [

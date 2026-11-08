@@ -7,6 +7,20 @@
 //   childs       -> anak-anaknya, ikut bergerak mengikuti induk
 import { LIBS } from "./libs.js";
 
+function applyRotation(matrix, rotation) {
+    if (Array.isArray(rotation)) {
+        LIBS.rotateX(matrix, rotation[0]);
+        LIBS.rotateY(matrix, rotation[1]);
+        LIBS.rotateZ(matrix, rotation[2]);
+        return;
+    }
+    if (rotation && typeof rotation === "object" && "axis" in rotation && "angle" in rotation) {
+        LIBS.rotateArbitraryAxis(matrix, rotation.axis, rotation.angle);
+        return;
+    }
+    throw new TypeError("Rotasi harus berupa [x, y, z] atau { axis, angle }.");
+}
+
 export class MyObject {
     GL = null;
     SHADER_PROGRAM = null;
@@ -35,20 +49,18 @@ export class MyObject {
             this.faces = mesh.faces;
         }
         this.childs = childs;
-        this.animate = animate;          // fungsi (t) => ({ pos, rot }) atau null
+        this.animate = animate;          // fungsi (t) => ({ pos, rot, scale }) atau null
         this.visible = visible;
         this.setPosition(pos, rot);
     }
 
-    // isi POSITION_MATRIX: rotasi X -> Y -> Z, lalu geser ke pos
+    // Rotasi dapat berupa [x, y, z] atau { axis: [x, y, z], angle }.
     setPosition(pos, rot = this.rot, scale = this.scale ?? 1) {
         this.pos = pos;
         this.rot = rot;
         this.scale = scale;
         LIBS.set_I4(this.POSITION_MATRIX);
-        LIBS.rotateX(this.POSITION_MATRIX, rot[0]);
-        LIBS.rotateY(this.POSITION_MATRIX, rot[1]);
-        LIBS.rotateZ(this.POSITION_MATRIX, rot[2]);
+        applyRotation(this.POSITION_MATRIX, rot);
         if (scale !== 1) for (const i of [0, 1, 2, 4, 5, 6, 8, 9, 10]) this.POSITION_MATRIX[i] *= scale;   // skala seragam
         LIBS.set_position(this.POSITION_MATRIX, pos[0], pos[1], pos[2]);
     }
@@ -57,11 +69,13 @@ export class MyObject {
     updateMove(time) {
         var a = this.animate(time) || {};
         var p = a.pos || [0, 0, 0];
-        var r = a.rot || [0, 0, 0];
+        var r = a.rot === undefined ? [0, 0, 0] : a.rot;
+        var scale = a.scale === undefined ? 1 : a.scale;
+        if (!Number.isFinite(scale) || scale <= 0)
+            throw new RangeError("Skala animasi harus berupa angka positif.");
         LIBS.set_I4(this.MOVE_MATRIX);
-        LIBS.rotateX(this.MOVE_MATRIX, r[0]);
-        LIBS.rotateY(this.MOVE_MATRIX, r[1]);
-        LIBS.rotateZ(this.MOVE_MATRIX, r[2]);
+        applyRotation(this.MOVE_MATRIX, r);
+        if (scale !== 1) for (const i of [0, 1, 2, 4, 5, 6, 8, 9, 10]) this.MOVE_MATRIX[i] *= scale;
         LIBS.set_position(this.MOVE_MATRIX, p[0], p[1], p[2]);
     }
 

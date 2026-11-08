@@ -81,6 +81,29 @@ export var LIBS = {
         m[9] = c * m[9] + s * mv8;
     },
 
+    rotateArbitraryAxis: function (m, axis, angle) {
+        if ((!Array.isArray(axis) && !ArrayBuffer.isView(axis)) || axis.length !== 3 ||
+            !Array.from(axis).every(Number.isFinite) || !Number.isFinite(angle))
+            throw new TypeError("Sumbu rotasi harus berisi tiga angka dan sudut harus berupa angka.");
+
+        var length = Math.hypot(axis[0], axis[1], axis[2]);
+        if (length === 0) throw new RangeError("Sumbu rotasi tidak boleh berupa vektor nol.");
+
+        var x = axis[0] / length, y = axis[1] / length, z = axis[2] / length;
+        var c = Math.cos(angle), s = Math.sin(angle), t = 1 - c;
+        var r00 = t * x * x + c, r01 = t * x * y - s * z, r02 = t * x * z + s * y;
+        var r10 = t * x * y + s * z, r11 = t * y * y + c, r12 = t * y * z - s * x;
+        var r20 = t * x * z - s * y, r21 = t * y * z + s * x, r22 = t * z * z + c;
+
+        for (var row = 0; row < 3; row++) {
+            var i = row, j = 4 + row, k = 8 + row;
+            var a = m[i], b = m[j], d = m[k];
+            m[i] = a * r00 + b * r10 + d * r20;
+            m[j] = a * r01 + b * r11 + d * r21;
+            m[k] = a * r02 + b * r12 + d * r22;
+        }
+        return m;
+    },
 
     translateZ: function (m, t) {
         m[14] += t;

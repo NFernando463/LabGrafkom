@@ -1,8 +1,8 @@
 // stage/main.js - Show Stage + Dining Area ala Five Nights at Freddy's 1, dengan Freddy, Chica & Bonnie sebagai pemeran.
-import { group, node, place } from "../bonnie/helpers/MyObject.js";
-import { startViewer } from "../bonnie/helpers/viewer.js";
-import { generateEllipsoidSurface, generateEllipticCone } from "../bonnie/helpers/builders.js";
-import { buildBonnie } from "../bonnie/helpers/model.js";
+import { group, node, place } from "../Bonnie/helpers/MyObject.js";
+import { startViewer } from "../Bonnie/helpers/viewer.js";
+import { generateEllipsoidSurface, generateEllipticCone } from "../Bonnie/helpers/builders.js";
+import { buildBonnie } from "../Bonnie/helpers/model.js";
 import { buildFreddy } from "../freddy/helpers/model.js";
 import { buildChica } from "../chica/chica/helpers/model.js";
 import * as jumpscareBonnie from "../jumpscare/bonnie.js";
@@ -226,6 +226,22 @@ function activeScare(t) {
 function pendingScare(t) {
     for (const name of SCARE_ORDER) if (t >= SCARE[name].closeup[0] && t < SCARE[name].T) return name;
     return null;
+}
+
+function replaySceneStart(t) {
+    if (t < T_BAND[1]) return T_BAND[0];
+    if (t < T_REOPEN[1]) return T_BAND[1];
+
+    for (const name of SCARE_ORDER) {
+        if (t < EXIT[name][1]) return ENTRY[name][0];
+    }
+
+    for (const name of ENTRY_ORDER) {
+        if (t < FINAL_ENTRY[name][1]) return FINAL_ENTRY[name][0];
+    }
+
+    if (t < T_FINAL_CLOSE[0]) return T_BAND2[0];
+    return T_FINAL_CLOSE[0];
 }
 
 /* ================================ MESH ================================ */
@@ -634,8 +650,8 @@ window.addEventListener("load", () => {
     let seek = Number(new URLSearchParams(location.search).get("t")) || 0;
 
     document.getElementById("replay").addEventListener("click", () => {
+        seek = replaySceneStart(timelineTime);
         start = null;
-        seek = 0;
     });
 
     startViewer({
