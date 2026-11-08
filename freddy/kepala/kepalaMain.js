@@ -4,6 +4,7 @@ import * as B from "../helpers/builders.js";
 import { node, group, place } from "../helpers/MyObject.js";
 import { buildWajah } from "./wajahMain.js";
 import { track, accent, HEAD_YAW, HEAD_PITCH, HEAD_ROLL } from "../helpers/show.js";
+import { scare } from "../helpers/scare.js";
 
 const C = B.COLORS;
 const sin = Math.sin;
@@ -23,7 +24,7 @@ export function buildKepala() {
         kids.push(group([s * 1.3, 1.2, -0.1], [0, 0, -s * 0.5], [
             node(B.generateEllipsoidSurface({ a: 0.62, b: 0.62, c: 0.38, color: C.PURPLE })),                     // daun telinga
             node(B.generateEllipsoidSurface({ a: 0.36, b: 0.36, c: 0.16, color: C.MUZZLE }), [0, 0, 0.26]),       // bagian dalam krem
-        ], { animate: t => ({ rot: [0, 0, s * 0.04 * sin(2 * t + (s > 0 ? 0 : 1.5))] }) }));
+        ], { animate: t => ({ rot: [0, 0, s * 0.04 * sin(2 * t + (s > 0 ? 0 : 1.5)) + s * 0.3 * scare.amount * sin(t * 44 + (s > 0 ? 0 : 2))] }) }));
     });
 
     // topi tinggi
@@ -36,7 +37,15 @@ export function buildKepala() {
 
     return group([0, 0, 0], [0, 0, 0], kids, {
         // pertunjukan: menyapu penonton (yaw), mendongak/menunduk (pitch), miring (roll) + angguk di tiap ketukan
-        animate: t => ({ rot: [track(HEAD_PITCH, t) + 0.03 * accent(t), track(HEAD_YAW, t), track(HEAD_ROLL, t)] })
+        animate: t => {
+            const a = scare.amount;
+            // saat jumpscare kepala menghadap kamera, miring dan bergetar ke kiri-kanan
+            return { rot: [
+                (track(HEAD_PITCH, t) + 0.03 * accent(t)) * (1 - a) + a * (0.1 + 0.07 * sin(t * 33)),
+                track(HEAD_YAW, t) * (1 - a) + a * 0.2 * sin(t * 41),
+                track(HEAD_ROLL, t) * (1 - a) + a * (0.2 + 0.08 * sin(t * 37)),
+            ] };
+        }
     });
 }
 

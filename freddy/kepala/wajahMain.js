@@ -3,6 +3,7 @@ import { LIBS } from "../helpers/libs.js";
 import * as B from "../helpers/builders.js";
 import { node, group, place } from "../helpers/MyObject.js";
 import { mouth } from "../helpers/show.js";
+import { scare } from "../helpers/scare.js";
 
 const C = B.COLORS;
 
@@ -14,13 +15,18 @@ const C = B.COLORS;
 
 // seberapa lebar mulut terbuka (radian) - lip-sync mengikuti lagu di helpers/show.js
 export function mouthOpen(t) {
-    return 0.03 + 0.42 * mouth(t);
+    const normal = 0.03 + 0.42 * mouth(t);
+    // saat jumpscare mulut terbuka lebar dan bergetar
+    const scream = 1.1 + 0.06 * Math.sin(t * 46) + 0.03 * Math.sin(t * 71);
+    return normal + (scream - normal) * scare.amount;
 }
 
 // kedipan: 0 = terbuka (sayu), 1 = tertutup
 function blink(t) {
     const c = t % 4.2;
-    return c < 0.18 ? Math.sin(c / 0.18 * Math.PI) : 0;
+    const normal = c < 0.18 ? Math.sin(c / 0.18 * Math.PI) : 0;
+    // saat jumpscare tidak berkedip, mata melotot
+    return normal * (1 - scare.amount) - 0.55 * scare.amount;
 }
 
 export function buildWajah() {

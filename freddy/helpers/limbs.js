@@ -95,7 +95,9 @@ export function buildArm(side, { upper = -0.2, out = 0.3, fore = -0.3, inward = 
    lalu telapak lebar dengan 3 jari besar dan alas abu-abu. */
 export const LEG = { thigh: 1.6, shin: 1.9 };
 
-export function buildLeg(side, { swing = 0.012, phase = 0 } = {}) {
+// walk(t) : 0..1 -> seberapa besar kaki melangkah (0 = berdiri di panggung, 1 = berjalan). Dipakai stage/main.js.
+export function buildLeg(side, { swing = 0.012, phase = 0, walk = null, walkRate = 7 } = {}) {
+    const gait = t => (walk ? Math.max(0, Math.min(1, Number(walk(t)))) : 0);
     const toe = (x, z, width = 0.48, height = 0.34, depth = 0.5) =>
         node(E(width, height, depth, C.PURPLE), [x, -0.5, z]);
     const foot = group([side * 0.4, 0, 0.0], [0, side * 0.28, 0], [
@@ -114,10 +116,18 @@ export function buildLeg(side, { swing = 0.012, phase = 0 } = {}) {
         node(B.generateHyperboloidTwoSheets({ a: 0.3, b: 0.1, c: 0.28, uMax: 0.9, sheet: 1, color: C.MUSCLE }), [0, -0.08, 0.52], [Math.PI / 2, 0, 0]), // pelindung lutut
         node(E(0.88, 0.96, 0.82, C.PURPLE), [0, -0.98, 0.02]),                                                   // betis tunggal, meruncing ke pergelangan
         ankle,
-    ], { animate: t => ({ rot: [0.05 * (1 - pulse(t)) * (side < 0 ? 1 : 0.8), 0, 0] }) });   // lutut menekuk halus tiap ketukan
+    ], { animate: t => {
+        // lutut menekuk halus tiap ketukan; saat berjalan menekuk tiap langkah
+        const g = gait(t);
+        return { rot: [0.05 * (1 - pulse(t)) * (side < 0 ? 1 : 0.8) * (1 - g) + 0.1 * g * Math.max(0, sin(walkRate * t + phase)), 0, 0] };
+    } });
     return group([0, 0, 0], [0, 0, side * 0.02], [
         node(E(0.9, 0.5, 0.82, C.PURPLE), [0, -0.05, 0]),                                                        // sendi pinggul
         node(E(0.95, 1.05, 0.9, C.PURPLE), [0, -0.72, 0]),                                                       // paha tunggal, siluet halus
         knee,
-    ], { animate: t => ({ rot: [swing * sin(Math.PI * beat(t) / 2 + phase), 0, 0] }) });   // berat badan bergeser pelan, kaki tetap menapak panggung
+    ], { animate: t => {
+        // berat badan bergeser pelan saat diam; saat berjalan kaki mengayun bergantian
+        const g = gait(t);
+        return { rot: [swing * sin(Math.PI * beat(t) / 2 + phase) * (1 - g) + 0.42 * g * sin(walkRate * t + phase), 0, 0] };
+    } });
 }

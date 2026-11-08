@@ -9,8 +9,8 @@ const sin = Math.sin;
 /* ====== KAKI KANAN ======
    ellipsoid: pinggul, lutut, pergelangan, jari kaki | hyperboloid 1 sisi: paha & betis
    hyperboloid 2 sisi: telapak kaki (kubah) */
-export function buildKakiKanan() {
-    return buildLeg(-1, { swing: 0.012, phase: 0 });
+export function buildKakiKanan(pose = {}) {
+    return buildLeg(-1, { swing: 0.012, phase: 0, ...pose });
 }
 
 function main() {

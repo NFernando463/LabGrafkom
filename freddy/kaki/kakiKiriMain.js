@@ -7,8 +7,8 @@ const C = B.COLORS;
 const sin = Math.sin;
 
 /* ====== KAKI KIRI ====== */
-export function buildKakiKiri() {
-    return buildLeg(1, { swing: 0.012, phase: Math.PI });
+export function buildKakiKiri(pose = {}) {
+    return buildLeg(1, { swing: 0.012, phase: Math.PI, ...pose });
 }
 
 function main() {
